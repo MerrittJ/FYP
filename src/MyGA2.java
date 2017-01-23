@@ -6,9 +6,9 @@ import java.util.Random;
 public class MyGA2 {
 	
 	private WindFarmLayoutEvaluator wfle;
-	private int numOfPops = 1;
-	private int generations = 0;
-	private int maxTurbines = 450;
+	private int numOfPops = 2;
+	private int generations = 1;
+	private int maxTurbines = 100;
 	private ArrayList<double[][]> populations; //pop#, turbine#, coords
 	double minSpac;
 	private Random rnd = new Random();
@@ -23,9 +23,12 @@ public class MyGA2 {
 		
 		//initialise populations
 		for (int i = 0; i < numOfPops;){
-			//double[][] layout = initRandom();
-			//double [][] layout = initGrid();
-			double[][] layout = initSpaced();
+			double[][] layout;
+			layout = initRandom();
+			//layout = initGrid();
+			//layout = initSpaced();
+			//layout = initGridEven();
+			
 			if (wfle.checkConstraint(layout)){
 				populations.add(layout);
 				i++;
@@ -38,21 +41,25 @@ public class MyGA2 {
 			}
 		}
 		
-		//local search, remove/add one
 		for (int i=0;i<generations;i++){
 			System.out.println("generation "+i);
 			
 			for (int k = 0;k<populations.size();k++){
 				System.out.println("k " +k);
-				//greedyRemoveOne(k);
-				//randomAddOne(k);
+				
+				if (populations.size() >= 2){
+					System.out.println("crossing");
+					crossoverUniform(populations.get(0), populations.get(1));
+				}
+				
+				
+				//5% chance for each turbine to move
+//				for (int j = 0;j<populations.get(k).length;j++){
+//					if (rnd.nextDouble() < 0.05){
+//						populations.set(k, moveOne(populations.get(k), j));
+//					}
+//				}
 			}
-//			if (!LSRemoveOne()){
-//				System.out.println("no turbines removed");
-//			if (!LSAddOne()){	//if no turbines removed/added from any pop
-//				System.out.println("no turbines added");
-//				break; //stop for 
-//			}
 		}
 		
 		int i = 0;
@@ -199,6 +206,35 @@ public class MyGA2 {
 		
 		return removed; //if any turbines removed, continue passes
 		
+	}	
+	
+	public double[][] moveOne(double[][] layout, int moveInd){
+		System.out.println(wfle.evaluate(layout));
+		double[][] holder = new double[layout.length-1][2];
+		
+		ArrayList<double[]> removed = new ArrayList<double[]>();
+		for (int i = 0; i<layout.length;i++){ //double[] pnt : layout){
+			if (i != moveInd){
+				removed.add(layout[i]);
+		    }
+		}
+		holder = convertAL(removed);
+
+		double[] toMovePoint = new double[2];
+		double maxDist = 10.0;
+		do{
+			double xMove = (rnd.nextGaussian()*2*maxDist) - maxDist; //between -maxDist and +maxDist
+			double yMove = (rnd.nextGaussian()*2*maxDist) - maxDist;
+			toMovePoint[0] = layout[moveInd][0] + xMove;
+			toMovePoint[1] = layout[moveInd][1] + yMove;
+		}
+		while(!pointValid(toMovePoint, holder));
+		
+		holder[moveInd][0] = toMovePoint[0];
+		holder[moveInd][1] = toMovePoint[1];
+		
+		System.out.println(wfle.evaluate(holder));
+		return holder;
 	}
 	
 	public double[][] initRandom(){
@@ -253,25 +289,19 @@ public class MyGA2 {
 		return convertAL(layout);
 	}
 	
-	public void initPixels(){
-		int fWidth = (int)wfle.getFarmWidth();
-		int fHeight = (int)wfle.getFarmHeight();
-		boolean[][] pixels = new boolean[fWidth][fHeight];
-		for (int i = 0;i<fWidth;i++){
-			for (int k=0;k<fHeight;k++){
-				pixels[i][k] = true;
-			}
-		}
+	public double[][] initGridEven(){
+		double interval = 8.001 * wfle.getTurbineRadius();
+		ArrayList<double[]> layout = new ArrayList<double[]>();
+
+		for (double x=0.0; x<wfle.getFarmWidth(); x=x+interval) {
+		    for (double y=0.0; y<wfle.getFarmHeight(); y=y+interval) {
+		    	double[] point = {x, y};
+		    	layout.add(point);
+	          }
+	      }
 		
-		int[] point = {rnd.nextInt(fWidth), rnd.nextInt(fHeight)};
-		
-		for (int i = 0;i<fWidth;i++){
-			for (int k=0;k<fHeight;k++){
-				if (getDist((double)point[0], (double)point[1], (double)i, (double)k) < 308){
-					pixels[i][k] = false;
-				}
-			}
-		}
+		//System.out.println("turbines " + layout.size());
+		return convertAL(layout);
 	}
 	
 	public double[][] initSpaced(){
@@ -280,6 +310,7 @@ public class MyGA2 {
 		double fHeight = wfle.getFarmHeight(); //def 14000
 		double gridSize = 400; //7000/400=17.5, 17*34=578
 
+		//TODO no hard coding
 		double[][] layout = new double[562][2];//(int) Math.floor(((fWidth/gridSize) * (fHeight/gridSize)))][2];
 		double[] point1 = new double[2];
 		double gridMarkerX = 0.0;
@@ -293,7 +324,7 @@ public class MyGA2 {
 		int layInd = 1;
 		
 		loop:
-		for (;gridMarkerX<fWidth;gridMarkerX += gridSize){//-gridSize
+		for (;gridMarkerX<fWidth;gridMarkerX += gridSize){
 			for (;gridMarkerY<fHeight;){
 				double[] point = new double[2];
 				point[0] = gridMarkerX + rnd.nextDouble()*gridSize;
@@ -318,19 +349,80 @@ public class MyGA2 {
 		return layout;
 	}
 	
-	public double[][] moveOne(double[][] layout){
-		double[][] holder = new double[layout.length-1][2];
-		int toMoveInd = rnd.nextInt(layout.length);
-		double[] toMovePoint = {layout[toMoveInd][0], layout[toMoveInd][1]};
-		layout[toMoveInd] = null;
-		int dir;
-		for (int i = 0;i<layout.length-1;i++){
-			if (layout[i] != null){
-				holder[i][0] = layout[i][0];
-				holder[i][1] = layout[i][1];
-			}
+	public ArrayList<double[][]> crossoverUniform(double[][] layout1, double[][] layout2){
+		ArrayList<double[][]> children = new ArrayList<double[][]>();
+		ArrayList<double[]> child1 = new ArrayList<double[]>();
+		ArrayList<double[]> child2 = new ArrayList<double[]>();
+		ArrayList<double[]> primLayout = new ArrayList<double[]>();
+		ArrayList<double[]> secLayout = new ArrayList<double[]>();
+		
+		
+		//TODO if one layout is larger than another?
+		//take larger layout
+		if (layout1.length < layout2.length){
+			primLayout = convertA(layout2);
+			secLayout = convertA(layout1);
 			
 		}
+		else{
+			primLayout = convertA(layout1);
+			secLayout = convertA(layout2);
+		}
+		
+		for (int i = 0; i<secLayout.size();i++){
+			if (rnd.nextDouble() < 0.5){
+				child1.add(primLayout.get(i));
+				child2.add(secLayout.get(i));
+			}
+			else {
+				child2.add(primLayout.get(i));
+				child1.add(secLayout.get(i));
+			}
+		}
+		
+		for (int i = secLayout.size();i<primLayout.size();i++){
+			if (rnd.nextDouble() < 0.5){
+				child1.add(primLayout.get(i));
+				child2.add(primLayout.get(i));
+			}
+		}
+		
+		double[][] child1A = convertAL(child1);
+		double[][] child2A = convertAL(child2);
+		
+		child1A = repairLayout(child1A);
+		child2A = repairLayout(child2A);
+		
+		children.add(child1A);
+		children.add(child2A);
+		
+		return children;
+	}
+	
+	public double[][] repairLayout(double[][] layout){
+		//TODO this isn't working
+		
+		if (!wfle.checkConstraint(layout)){
+			ArrayList<double[]> repairedLayoutAL = new ArrayList<double[]>();
+			for (int i = 0;i<layout.length;i++){
+				repairedLayoutAL.add(layout[i]);
+			}
+					
+			//check minDist
+			for (int i=0; i<layout.length; i++) {
+				for (int j = 0; j<layout.length; j++){
+					if (i != j){
+						if (tooClose(layout[i][0], layout[i][1], layout[j][0], layout[j][1])){
+							repairedLayoutAL.remove(j);
+						}
+					}
+				}
+			}
+			
+			return convertAL(repairedLayoutAL);
+		}
+		
+		return layout;
 	}
 	
 	public boolean tooClose(double x1, double y1, double x2, double y2){
@@ -354,7 +446,7 @@ public class MyGA2 {
 				break;
 			}
 			else if (tooClose(point[0], point[1], layout[i][0], layout[i][1])){
-				System.out.println("point invalid");
+				System.out.println("point invalid " + point[0] + " " + point[1] + " " + layout[i][0] + " " + layout[i][1]);
 				return false;
 			}
 		}
