@@ -45,7 +45,7 @@ public class MyGA2 {
 			System.out.println("generation "+i);
 			
 			for (int k = 0;k<populations.size();k++){
-				System.out.println("k " +k);
+				System.out.println("pop " +k);
 				
 				if (populations.size() >= 2){
 					System.out.println("crossing");
@@ -409,10 +409,10 @@ public class MyGA2 {
 			}
 					
 			//check minDist
-			for (int i=0; i<layout.length; i++) {
-				for (int j = 0; j<layout.length; j++){
+			for (int i=0; i<repairedLayoutAL.size(); i++) {
+				for (int j = 0; j<repairedLayoutAL.size(); j++){
 					if (i != j){
-						if (tooClose(layout[i][0], layout[i][1], layout[j][0], layout[j][1])){
+						if (tooClose(repairedLayoutAL.get(i)[0], repairedLayoutAL.get(i)[1], repairedLayoutAL.get(j)[0], repairedLayoutAL.get(j)[1])){
 							repairedLayoutAL.remove(j);
 						}
 					}
