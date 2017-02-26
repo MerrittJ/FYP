@@ -1,6 +1,8 @@
 import java.util.ArrayList;
 import java.util.Random;
 
+import Model.WindFarmLayoutEvaluator;
+
 public class GA {
 
     WindFarmLayoutEvaluator wfle;

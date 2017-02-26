@@ -1,3 +1,7 @@
+package Model;
+
+import View.View;
+
 public class main {
 
   public static void main(String argv[]) {
@@ -6,6 +10,8 @@ public class main {
           KusiakLayoutEvaluator wfle = new KusiakLayoutEvaluator();
           wfle.initialize(ws);
           MyGA2 myga = new MyGA2(wfle);
+          View v = new View(myga.getBestLayout());
+          
           //GA ga = new GA(wfle);
           //ga.run();
           //MyFirstGA algorithm = new MyFirstGA(wfle);

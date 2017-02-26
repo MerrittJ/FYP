@@ -1,3 +1,4 @@
+package Model;
 /**
  * The class WindFarmLayoutEvaluator is an interface to easily exchange the
  * evaluation function of the wind farm layouts. The evaluator has to be initialized

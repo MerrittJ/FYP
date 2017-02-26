@@ -2,6 +2,8 @@ import java.net.*;
 import java.io.*;
 import org.json.*;
 
+import Model.WindFarmLayoutEvaluator;
+
 /**
  * The class CompetitionEvaluator connects the evaluation cost function of the competition to the online 
  * server of the competition
