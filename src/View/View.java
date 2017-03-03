@@ -18,7 +18,7 @@ public class View {
 		LayoutDrawer ld = new LayoutDrawer(layout);
 		
 		ld.setBackground(new Color(248, 213, 131));
-		ld.setPreferredSize(new Dimension(7000, 14000));
+		ld.setPreferredSize(new Dimension(1800, 1000)); //TODO 7000x14000???
 		
 		frame.getContentPane().add(ld, BorderLayout.CENTER);
 

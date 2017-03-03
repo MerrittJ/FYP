@@ -6,6 +6,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
+import View.View;
+
 public class MyGA2 {
 
 	private WindFarmLayoutEvaluator wfle;
@@ -18,6 +20,7 @@ public class MyGA2 {
 	private double mutationRate;
 	private double maxGausDist; //max dist a turbine can move during mutation
 	private boolean useRepA;
+	private boolean visVerify = true;
 	private ArrayList<double[][]> populations; //pop#, turbine#, coords
 	//TODO rewrite as HashMap?
 	private ArrayList<Double> fitnesses;
@@ -31,18 +34,19 @@ public class MyGA2 {
 		wfle = evaluator;
 		utils = new Utils(wfle);
 		loadSettings(utils.getSettings());
-		double thisRun = 0.0;
 		populations = new ArrayList<double[][]>();
 		fitnesses = new ArrayList<Double>();
 		minSpac = 8.001 * wfle.getTurbineRadius();
 
-		//initialise populations
+		initPops();
+		runGA();
+	}
+	
+	public void initPops(){
+		double thisRun = 0.0;
 		for (int i = 0; i < popNo;){
 			double[][] layout;
-			//layout = initRandom();
 			layout = initGridRnd();
-			//layout = initSpaced();
-			//layout = initGridEven();
 
 			if (wfle.checkConstraint(layout)){
 				populations.add(layout);
@@ -55,7 +59,9 @@ public class MyGA2 {
 				System.out.println("layout failed");
 			}
 		}
-
+	}
+	
+	public void runGA(){
 		for (int i=0;i<genNo;i++){
 			System.out.println("generation "+i);
 			//TODO fix this >3
@@ -72,23 +78,6 @@ public class MyGA2 {
 		}
 
 		utils.printFits(true, fitnesses, populations); //wrong pops being kept each gen
-	}
-
-	public void randomAddOne(int popIndex){
-		double[][] layout = populations.get(popIndex);
-		double[][] layoutOptConv;
-		do {	
-			ArrayList<double[]> layoutOpt = utils.convertA(layout);
-			double[] point = {rnd.nextDouble()*wfle.getFarmWidth(), rnd.nextDouble()*wfle.getFarmHeight()};
-			layoutOpt.add(point);
-			layoutOptConv = utils.convertAL(layoutOpt);
-			System.out.println("atmpt");
-		}
-		while (!wfle.checkConstraint(layoutOptConv));
-
-		double fit = wfle.evaluate(layoutOptConv);
-		System.out.println(layoutOptConv.length + " " + fit);
-
 	}
 
 	public void greedyRemoveOne(int popIndex){
@@ -456,6 +445,11 @@ public class MyGA2 {
 	public double[][] repairLayoutA(double[][] layout){
 		System.out.println("beginning repA");
 		if (!wfle.checkConstraint(layout)){
+			
+			if (visVerify){
+				View v = new View(layout);
+			}			
+			
 			ArrayList<double[]> repairedAL = new ArrayList<double[]>();
 			for (int i = 0;i<layout.length;i++){
 				repairedAL.add(layout[i]);
@@ -611,10 +605,24 @@ public class MyGA2 {
 			for (int j = 0; j<children.get(i).length;j++){
 				if (rnd.nextDouble() < mutRate){
 					children.set(i, moveOne(children.get(i), j));
+					//GARndAddOne(children.get(i));
 				}
 			}
 		}
 		return children;
+	}
+	
+	public double[][] AddOneS(double[][] layout){
+		//randomly adds a turbine
+		double[] point = new double[2];
+		do {	
+			point[0] = rnd.nextDouble()*wfle.getFarmWidth();
+			point[1] = rnd.nextDouble()*wfle.getFarmHeight();
+		}
+		while (!utils.pointValid(point, layout));
+		
+		return layout;
+
 	}
 	
 	public ArrayList<Double> evalGen(ArrayList<double[][]> pops){
