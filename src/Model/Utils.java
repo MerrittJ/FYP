@@ -8,11 +8,13 @@ import java.util.stream.Collectors;
 public class Utils {
 
 	private WindFarmLayoutEvaluator wfle;
+	private String settingsName;
 	private  Properties settings;
 
-	public Utils(WindFarmLayoutEvaluator evaluator){
+	public Utils(WindFarmLayoutEvaluator evaluator, String settingsName){
 		wfle = evaluator;
 		settings = new Properties();
+		this.settingsName = settingsName;
 		reader();
 
 	}
@@ -131,14 +133,7 @@ public class Utils {
 		InputStream input = null;
 
 		try {
-
-			//    		String filename = "settings.properties";
-			//    		input = Utils.class.getClassLoader().getResourceAsStream(filename);
-			//    		    		if(input==null){
-			//    	            System.out.println("Sorry, unable to find " + filename);
-			//    		    return;
-			//    		}
-			input = new FileInputStream("settings.properties");
+			input = new FileInputStream(settingsName);
 
 			//load a properties file from class path, inside static method
 			settings.load(input);

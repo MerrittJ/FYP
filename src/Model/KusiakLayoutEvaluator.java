@@ -134,7 +134,7 @@ public class KusiakLayoutEvaluator extends WindFarmLayoutEvaluator {
 	                double dist=(layout[i][0]-layout[j][0])*(layout[i][0]-layout[j][0])+
 	                (layout[i][1]-layout[j][1])*(layout[i][1]-layout[j][1]);
 	                if (dist<scenario.minDist) {
-			    System.out.println("Security distance contraint violated between turbines "+i+" ("+layout[i][0]+", "+layout[i][1]+") and "+j+" ("+layout[j][0]+", "+layout[j][1]+"): "+Math.sqrt(dist)+" > "+Math.sqrt(scenario.minDist));
+			    //System.out.println("Security distance contraint violated between turbines "+i+" ("+layout[i][0]+", "+layout[i][1]+") and "+j+" ("+layout[j][0]+", "+layout[j][1]+"): "+Math.sqrt(dist)+" > "+Math.sqrt(scenario.minDist));
 	                    return false;
 	                }
 	            }

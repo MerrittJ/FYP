@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Random;
 
-import View.View;
 
 public class MyGA2 {
 
@@ -14,32 +13,42 @@ public class MyGA2 {
 	private double initGridSpacing;
 	private int popNo;
 	private int genNo;
-	private int tournSize;
-	private int maxTurbines = 200; //TODO remove?
-	private double crossProb; //TODO explain this?
-	private double mutationRate;
+	private int tournSize = 2;
+	private double mutAddProb;
+	private double mutRateTurb;
+	private double mutRateLayout;
 	private double maxGausDist; //max dist a turbine can move during mutation
 	private boolean useRepA;
-	private boolean visVerify = true;
+	private boolean useMutAddA;
+	private String altMode;
 	private ArrayList<double[][]> populations; //pop#, turbine#, coords
 	//TODO rewrite as HashMap?
 	private ArrayList<Double> fitnesses;
 	private double[][] bestLayout;
-	double minSpac;
+	private ArrayList<ArrayList<Triple<Integer, Double, Integer>>> results; //gen -> pop#,fit,turb#
+	private double minSpac;
 	private Random rnd = new Random();
 	private Utils utils;
 
 
-	public MyGA2(WindFarmLayoutEvaluator evaluator){
+	public MyGA2(WindFarmLayoutEvaluator evaluator, String settingsName){
 		wfle = evaluator;
-		utils = new Utils(wfle);
+		utils = new Utils(wfle, settingsName);
 		loadSettings(utils.getSettings());
 		populations = new ArrayList<double[][]>();
 		fitnesses = new ArrayList<Double>();
 		minSpac = 8.001 * wfle.getTurbineRadius();
+		results = new ArrayList<ArrayList<Triple<Integer, Double, Integer>>>();
 
-		initPops();
-		runGA();
+		if (altMode.equals("off")){
+			initPops();
+			runGA();
+		}
+		else if (altMode.equals("random")){
+			initAltRandom();
+			saveResults(populations, fitnesses);
+		}
+		
 	}
 	
 	public void initPops(){
@@ -68,16 +77,36 @@ public class MyGA2 {
 			if (populations.size() >= 3){
 				ArrayList<double[][]> parents = tournament(populations, fitnesses, tournSize);
 				ArrayList<double[][]> children = crossover(parents);
-				children = mutate(children, mutationRate);
+				children = mutate(children, mutRateTurb, mutRateLayout);
 				populations = addChildren(populations, children);
 				populations = repairAll(populations, useRepA); 
 				fitnesses = evalGen(populations);
-				populations = selection(populations, fitnesses);//TODO this isn't working
+				populations = selection(populations, fitnesses);
 			}
 			utils.printFits(false, fitnesses, populations);
+			saveResults(populations, fitnesses); 
 		}
 
-		utils.printFits(true, fitnesses, populations); //wrong pops being kept each gen
+		utils.printFits(true, fitnesses, populations); 
+	}
+	
+	public void initAltRandom(){
+		double thisRun = 0.0;
+		for (int i = 0; i < popNo*genNo;){ //create number of layouts comparable to a GA run
+			double[][] layout;
+			layout = initRandom();
+
+			if (wfle.checkConstraint(layout)){
+				populations.add(layout);
+				i++;
+				thisRun = wfle.evaluate(layout);
+				fitnesses.add(thisRun);
+				System.out.println(layout.length + " " + thisRun );
+			}
+			else {
+				System.out.println("layout failed");
+			}
+		}
 	}
 
 	public void greedyRemoveOne(int popIndex){
@@ -238,60 +267,45 @@ public class MyGA2 {
 		if (tries<100){
 			result[moveInd][0] = toMovePoint[0];
 			result[moveInd][1] = toMovePoint[1];
-			System.out.println("mutation succeeded");
+			//System.out.println("mutation succeeded");
 		}
 		else {
 			result[moveInd][0] = rem[0];
 			result[moveInd][1] = rem[1];
-			System.out.println("mutation failed. Skipping.");
+			//System.out.println("mutation failed. Skipping.");
 		}
 
 		return result;
 	}
 
 	public double[][] initRandom(){
-		//System.out.println("turbines " + maxTurbines);
-
-		double[][] layout = new double[maxTurbines][2];
-
-		double x = rnd.nextDouble() * wfle.getFarmWidth();
-		double y = rnd.nextDouble() * wfle.getFarmHeight();
-		layout[0][0] = x;
-		layout[0][1] = y;
-
-		int i = 1;
-		while (i<layout.length){//wfle.checkConstraint(layout));
-			x = rnd.nextDouble() * wfle.getFarmWidth();
-			y = rnd.nextDouble() * wfle.getFarmHeight();
-
-			boolean validCoord = true;
-			for (int k=0;k<layout.length;k++){
-				if (layout[k][0] == 0.0 && layout[k][1] == 0.0){
-					break;
-				}
-
-				if (minSpac > utils.getDist(layout[k][0], layout[k][1], x, y)){
-					validCoord = false;
-				}
+		int tries = 0;
+		ArrayList<double[]> layout = new ArrayList<double[]>();
+		
+		do{
+			double x = rnd.nextDouble() * wfle.getFarmWidth();
+			double y = rnd.nextDouble() * wfle.getFarmHeight();
+			double[] point = {x,y};
+			
+			if (utils.pointValid(point, utils.convertAL(layout))){
+				layout.add(point);
 			}
-
-			if (validCoord){
-				layout[i][0] = x;
-				layout[i][1] = y;
-				i++;
+			else {
+				tries++;
 			}
 		}
-		return layout;
+		while (tries <= 500);
+		
+		return utils.convertAL(layout);
 	}
 
 	public double[][] initGridRnd(){
-		double interval = 8.001 * wfle.getTurbineRadius();
-		double spacerX = wfle.getFarmWidth()*initGridSpacing; //randomising spacing of grid up to 1%
+		double spacerX = wfle.getFarmWidth()*initGridSpacing; //randomising spacing of grid up to x%
 		double spacerY = wfle.getFarmHeight()*initGridSpacing;
 		ArrayList<double[]> layout = new ArrayList<double[]>();
 
-		for (double x=0.0; x<wfle.getFarmWidth(); x=x+(interval+(rnd.nextDouble()*spacerX))) {
-			for (double y=0.0; y<wfle.getFarmHeight(); y=y+(interval+(rnd.nextDouble()*spacerY))) {
+		for (double x=0.0; x<wfle.getFarmWidth(); x=x+(minSpac+(rnd.nextDouble()*spacerX))) {
+			for (double y=0.0; y<wfle.getFarmHeight(); y=y+(minSpac+(rnd.nextDouble()*spacerY))) {
 				double[] point = {x, y};
 				layout.add(point);
 			}
@@ -299,67 +313,6 @@ public class MyGA2 {
 
 		//System.out.println("turbines " + layout.size());
 		return utils.convertAL(layout);
-	}
-
-	public double[][] initGridEven(){
-		System.out.println("making grid even");
-		double interval = 8.001 * wfle.getTurbineRadius();
-		ArrayList<double[]> layout = new ArrayList<double[]>();
-
-		for (double x=0.0; x<wfle.getFarmWidth(); x=x+interval) {
-			for (double y=0.0; y<wfle.getFarmHeight(); y=y+interval) {
-				double[] point = {x, y};
-				layout.add(point);
-			}
-		}
-
-		//System.out.println("turbines " + layout.size());
-		return utils.convertAL(layout);
-	}
-
-	public double[][] initSpaced(){
-		System.out.println("starting spaced");
-		double fWidth = wfle.getFarmWidth(); //def 7000
-		double fHeight = wfle.getFarmHeight(); //def 14000
-		double gridSize = 400; //7000/400=17.5, 17*34=578
-
-		// no hard coding!
-		double[][] layout = new double[562][2];//(int) Math.floor(((fWidth/gridSize) * (fHeight/gridSize)))][2];
-		double[] point1 = new double[2];
-		double gridMarkerX = 0.0;
-		double gridMarkerY = 0.0;
-		point1[0] = gridMarkerX + rnd.nextDouble()*gridSize;
-		point1[1] = gridMarkerY + rnd.nextDouble()*gridSize;
-		//System.out.println("new point " + point1[0] +" "+ point1[1]);
-		gridMarkerX += gridSize;
-		gridMarkerY += gridSize;
-		layout[0] = point1;
-		int layInd = 1;
-
-		loop:
-			for (;gridMarkerX<fWidth;gridMarkerX += gridSize){
-				for (;gridMarkerY<fHeight;){
-					double[] point = new double[2];
-					point[0] = gridMarkerX + rnd.nextDouble()*gridSize;
-					point[1] = gridMarkerY + rnd.nextDouble()*gridSize;
-					//System.out.println("new point " + point[0] +" "+ point[1]);
-
-					if (utils.pointValid(point, layout)){
-						System.out.println("ind " + layInd);
-						layout[layInd] = point;
-						layInd++;
-						gridMarkerY += gridSize;
-						if (layInd >= layout.length){
-							break loop;
-						}
-					}
-				}
-				gridMarkerY = 0.0;
-			}
-
-		System.out.println("layout " +layout.length);
-
-		return layout;
 	}
 
 	public ArrayList<double[][]> crossoverUniform(double[][] layout1, double[][] layout2){
@@ -381,7 +334,7 @@ public class MyGA2 {
 
 		//iterate through smaller layout
 		for (int i = 0; i<secLayout.size();i++){
-			if (rnd.nextDouble() > crossProb){ //0.5 = uniform crossover
+			if (rnd.nextDouble() > 0.5){ //0.5 = uniform crossover
 				child1.add(primLayout.get(i));
 				child2.add(secLayout.get(i));
 			}
@@ -393,7 +346,7 @@ public class MyGA2 {
 
 		//then iterate through larger, to fill
 		for (int i = secLayout.size();i<primLayout.size();i++){
-			if (rnd.nextDouble() < 0.5){ //TODO should this be 50/50 chance to fill spot?
+			if (rnd.nextDouble() < 0.5){
 				child1.add(primLayout.get(i));
 				child2.add(primLayout.get(i));
 			}
@@ -444,11 +397,7 @@ public class MyGA2 {
 	
 	public double[][] repairLayoutA(double[][] layout){
 		System.out.println("beginning repA");
-		if (!wfle.checkConstraint(layout)){
-			
-			if (visVerify){
-				View v = new View(layout);
-			}			
+		if (!wfle.checkConstraint(layout)){			
 			
 			ArrayList<double[]> repairedAL = new ArrayList<double[]>();
 			for (int i = 0;i<layout.length;i++){
@@ -528,12 +477,7 @@ public class MyGA2 {
 		//iterate over indices to keep and add to holder
 		for(int j = 0; j<popsToKeep.size();j++){ 
 			popHold.add(pops.get(j));
-		}
-		
-//		for (double[][] pop : popHold){
-//			System.out.println("popHold " + pop.length);
-//		}
-		
+		}		
 		
 		//return holder
 		return popHold;
@@ -597,32 +541,77 @@ public class MyGA2 {
 		return children;
 	}
 	
-	public ArrayList<double[][]> mutate(ArrayList<double[][]> children, double mutRate){
+	public ArrayList<double[][]> mutate(ArrayList<double[][]> children, double mutRateT, double mutRateL){
 		//only mutates children
-		//mutRate% chance for each turbine to move
+		//mutRateT% chance for each turbine to move
 		for (int i = 0;i<children.size();i++){
-			System.out.println("mutating pop " + i);
-			for (int j = 0; j<children.get(i).length;j++){
-				if (rnd.nextDouble() < mutRate){
-					children.set(i, moveOne(children.get(i), j));
-					//GARndAddOne(children.get(i));
+			if (rnd.nextDouble() < mutRateL){
+				System.out.println("mutating pop " + i);
+				for (int j = 0; j<children.get(i).length;j++){
+					if (rnd.nextDouble() < mutRateT){
+						children.set(i, moveOne(children.get(i), j));
+					}
 				}
+			}
+			
+			if (rnd.nextDouble() < mutAddProb){
+				if (useMutAddA){
+					children.set(i, mutAddA(children.get(i)));
+				}
+				else {
+					children.set(i, mutAddS(children.get(i)));
+				}
+				
 			}
 		}
 		return children;
 	}
 	
-	public double[][] AddOneS(double[][] layout){
+	public double[][] mutAddS(double[][] layout){
 		//randomly adds a turbine
 		double[] point = new double[2];
+		int tries = 0;
+		int added = 0;
 		do {	
 			point[0] = rnd.nextDouble()*wfle.getFarmWidth();
 			point[1] = rnd.nextDouble()*wfle.getFarmHeight();
+			
+			if (utils.pointValid(point, layout)){
+				ArrayList<double[]> layoutAL = utils.convertA(layout);
+				layoutAL.add(point);
+				layout = utils.convertAL(layoutAL);
+				added++;
+				tries = 0;
+			}
+			else {
+				tries++;
+			}
 		}
-		while (!utils.pointValid(point, layout));
+		while (tries <= 500);
 		
+		System.out.println(added + " turbines added in mutation");
 		return layout;
+	}
+	
+	public double[][] mutAddA(double[][] layout){
+		//adds a turbine where there is space
+		double[] point = new double[2];
+		int added = 0;
+		for (double i = 0;i<wfle.getFarmWidth();i=i+minSpac){
+			for (double j = 0;j<wfle.getFarmHeight();j=j+minSpac){
+				point[0] = i;
+				point[1] = j;
+				if (utils.pointValid(point, layout)){
+					ArrayList<double[]> layoutAL = utils.convertA(layout);
+					layoutAL.add(point);
+					added++;
+					layout = utils.convertAL(layoutAL);
+				}
+			}
+		}
 
+		System.out.println(added + " turbines added in mutation");
+		return layout;
 	}
 	
 	public ArrayList<Double> evalGen(ArrayList<double[][]> pops){
@@ -640,20 +629,39 @@ public class MyGA2 {
 		return newFits;
 	}
 	
+	public void saveResults(ArrayList<double[][]> pops, ArrayList<Double> fits){
+		//called at end of each gen
+		ArrayList<Triple<Integer, Double, Integer>> generation = new ArrayList<Triple<Integer, Double, Integer>>();
+		int popNo = 0;
+		for (double[][] layout : pops){
+			Triple<Integer, Double, Integer> pop = new Triple<Integer, Double, Integer>(popNo,fits.get(popNo),layout.length);
+			popNo++;
+			generation.add(pop);
+		}
+		
+		results.add(generation);
+	}
+	
 	public double[][] getBestLayout() {
 		return bestLayout;
 	}
 	
+	public ArrayList<ArrayList<Triple<Integer, Double, Integer>>> getResults() {
+		return results;
+	}
+	
 	public void loadSettings(Properties prop){
 		//prop.getProperty("scen");
-		initGridSpacing = Double.parseDouble(prop.getProperty("initGridSpacing"));
-		popNo 			= Integer.parseInt(prop.getProperty("popNo"));
-		genNo 			= Integer.parseInt(prop.getProperty("genNo"));
-		tournSize 		= Integer.parseInt(prop.getProperty("tournSize"));
-		crossProb 		= Double.parseDouble(prop.getProperty("crossProb"));
-		mutationRate 	= Double.parseDouble(prop.getProperty("mutationRate"));
-		maxGausDist 	= Double.parseDouble(prop.getProperty("maxGausDist"));
-		useRepA 		= Boolean.parseBoolean(prop.getProperty("useRepA"));
+		initGridSpacing 		= Double.parseDouble(prop.getProperty("initGridSpacing"));
+		popNo 					= Integer.parseInt(prop.getProperty("popNo"));
+		genNo 					= Integer.parseInt(prop.getProperty("genNo"));
+		mutAddProb				= Double.parseDouble(prop.getProperty("mutAddProb"));
+		mutRateTurb 			= Double.parseDouble(prop.getProperty("mutRateTurb"));
+		mutRateLayout 			= Double.parseDouble(prop.getProperty("mutRateLayout"));
+		maxGausDist 			= Double.parseDouble(prop.getProperty("maxGausDist"));
+		useRepA 				= Boolean.parseBoolean(prop.getProperty("useRepA"));
+		useMutAddA 				= Boolean.parseBoolean(prop.getProperty("useMutAddA"));
+		altMode 				= prop.getProperty("altMode");
 	}
 	
 }
