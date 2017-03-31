@@ -25,9 +25,9 @@ public class ExcelWriter {
 	private WritableCellFormat timesBoldUnderline;
 	private WritableCellFormat times;
 	private String inputFile;
-	private ArrayList<ArrayList<ArrayList<Triple<Integer, Double, Integer>>>> results; //run -> gen -> pop#,fit,turb#
+	private ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>> results; //run -> gen -> pop#,fit,turb#
 
-	public void setResults(ArrayList<ArrayList<ArrayList<Triple<Integer, Double, Integer>>>> results) {
+	public void setResults(ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>> results) {
 		this.results = results;
 	}
 
@@ -43,7 +43,7 @@ public class ExcelWriter {
 		WritableWorkbook workbook = Workbook.createWorkbook(file, wbSettings);
 
 		int runNo = 0;
-		for (ArrayList<ArrayList<Triple<Integer, Double, Integer>>> run : results){ //30 runs
+		for (ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>> run : results){ //30 runs
 			workbook.createSheet("Run "+runNo, runNo);
 			WritableSheet excelSheet = workbook.getSheet(runNo);
 			createHeaders(excelSheet);
@@ -84,22 +84,24 @@ public class ExcelWriter {
 		addCaption(sheet, 1, 0, "Population");
 		addCaption(sheet, 2, 0, "Fitness");
 		addCaption(sheet, 3, 0, "Turbines");
+		addCaption(sheet, 4, 0, "Children survived");
 
 
 	}
 
-	private void createResults(WritableSheet sheet, ArrayList<ArrayList<Triple<Integer, Double, Integer>>> gens) throws WriteException,
+	private void createResults(WritableSheet sheet, ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>> gens) throws WriteException,
 	RowsExceededException {
 
 		int row = 1;
 		int genNo = 1;
-		for (ArrayList<Triple<Integer, Double, Integer>> gen : gens){ //50+ gen
-			for (Triple<Integer, Double, Integer> pop : gen){
+		for (ArrayList<Result<Integer, Double, Integer, Integer>> gen : gens){ //50+ gen
+			for (Result<Integer, Double, Integer, Integer> pop : gen){
 				//gen,pop#,fit,turb#
 				writeCell(sheet, 0, row, genNo);
 				writeCell(sheet, 1, row, pop.x+1);
 				writeCellD(sheet, 2, row, pop.y);
 				writeCell(sheet, 3, row, pop.z);
+				writeCell(sheet, 4, row, pop.a);
 				row++;
 			}
 			genNo++;

@@ -14,6 +14,8 @@ public class MyGA2 {
 	private int popNo;
 	private int genNo;
 	private int tournSize = 2;
+	private double takeLargerProb;
+
 	private double mutAddProb;
 	private double mutRateTurb;
 	private double mutRateLayout;
@@ -25,20 +27,26 @@ public class MyGA2 {
 	//TODO rewrite as HashMap?
 	private ArrayList<Double> fitnesses;
 	private double[][] bestLayout;
-	private ArrayList<ArrayList<Triple<Integer, Double, Integer>>> results; //gen -> pop#,fit,turb#
+	private ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>> results; //gen -> pop#,fit,turb#
 	private double minSpac;
-	private Random rnd = new Random();
+	private Random rnd;
 	private Utils utils;
+	
+	private int crossMode;
+	private double c2Prob;	
+	private int c3Perc;
+	private boolean altTourn;
 
 
-	public MyGA2(WindFarmLayoutEvaluator evaluator, String settingsName){
+	public MyGA2(WindFarmLayoutEvaluator evaluator, String settingsName, int seed){
 		wfle = evaluator;
+		rnd = new Random(seed);
 		utils = new Utils(wfle, settingsName);
 		loadSettings(utils.getSettings());
 		populations = new ArrayList<double[][]>();
 		fitnesses = new ArrayList<Double>();
 		minSpac = 8.001 * wfle.getTurbineRadius();
-		results = new ArrayList<ArrayList<Triple<Integer, Double, Integer>>>();
+		results = new ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>();
 
 		if (altMode.equals("off")){
 			initPops();
@@ -46,7 +54,7 @@ public class MyGA2 {
 		}
 		else if (altMode.equals("random")){
 			initAltRandom();
-			saveResults(populations, fitnesses);
+			saveResults(populations, fitnesses, 0);
 		}
 		
 	}
@@ -73,23 +81,39 @@ public class MyGA2 {
 	public void runGA(){
 		for (int i=0;i<genNo;i++){
 			System.out.println("generation "+i);
+			int childrenSurv = 0;
 			//TODO fix this >3
-			if (populations.size() >= 3){
-				ArrayList<double[][]> parents = tournament(populations, fitnesses, tournSize);
+			if (populations.size() >= 3){	
+				
+				ArrayList<double[][]> parents = new ArrayList<double[][]>();
+				if (!altTourn){
+					parents = tournament(populations, fitnesses, tournSize);
+				}
+				else {
+					parents = tournament2(populations, fitnesses, tournSize);
+				}
+				
 				ArrayList<double[][]> children = crossover(parents);
 				children = mutate(children, mutRateTurb, mutRateLayout);
 				populations = addChildren(populations, children);
 				populations = repairAll(populations, useRepA); 
 				fitnesses = evalGen(populations);
 				populations = selection(populations, fitnesses);
+
+				childrenSurv = checkForChildren(populations, children);
+				System.out.println("children survived: " + childrenSurv);
+
+				
+				
+				
 			}
 			utils.printFits(false, fitnesses, populations);
-			saveResults(populations, fitnesses); 
+			saveResults(populations, fitnesses, childrenSurv); 
 		}
 
 		utils.printFits(true, fitnesses, populations); 
 	}
-	
+
 	public void initAltRandom(){
 		double thisRun = 0.0;
 		for (int i = 0; i < popNo*genNo;){ //create number of layouts comparable to a GA run
@@ -106,38 +130,6 @@ public class MyGA2 {
 			else {
 				System.out.println("layout failed");
 			}
-		}
-	}
-
-	public void greedyRemoveOne(int popIndex){
-		int bestIndex = 0;
-		boolean foundBetter = false;
-		ArrayList<double[]> layoutOpt;
-		double[][] layout = populations.get(popIndex);
-		double orig = wfle.evaluate(layout);
-
-		for (int i = 0; i<populations.get(popIndex).length;i++){
-			layoutOpt = utils.convertA(layout);
-			layoutOpt.remove(i);
-			double[][] layoutOptA = utils.convertAL(layoutOpt);
-
-			double opt = wfle.evaluate(layoutOptA);
-			System.out.println("try "+ i + " orig " + orig + " opt " + opt);
-			if (opt < orig){
-				bestIndex = i;
-				foundBetter = true;
-				System.out.println("better");
-			}
-		}
-
-		if (foundBetter){
-			ArrayList<double[]> finalOpt = utils.convertA(layout);
-			finalOpt.remove(bestIndex);
-			double[][] finalOptA = utils.convertAL(finalOpt);
-			populations.set(popIndex, finalOptA);
-		}
-		else {
-			System.out.println("no better found");
 		}
 	}
 
@@ -363,6 +355,108 @@ public class MyGA2 {
 
 		return children;
 	}
+	
+	public ArrayList<double[][]> crossoverUniform2(double[][] layout1, double[][] layout2){
+		ArrayList<double[][]> children = new ArrayList<double[][]>();
+		ArrayList<double[]> child1 = new ArrayList<double[]>();
+		ArrayList<double[]> child2 = new ArrayList<double[]>();
+		ArrayList<double[]> primLayout = new ArrayList<double[]>();
+		ArrayList<double[]> secLayout = new ArrayList<double[]>();
+
+		//take larger layout
+		if (layout1.length >= layout2.length){
+			primLayout = utils.convertA(layout1);
+			secLayout = utils.convertA(layout2);
+		}
+		else{
+			primLayout = utils.convertA(layout2);
+			secLayout = utils.convertA(layout1);
+		}
+
+		//iterate through smaller layout
+		for (int i = 0; i<secLayout.size();i++){
+			if (rnd.nextDouble() > c2Prob){ //0.5 = uniform crossover
+				child1.add(primLayout.get(i));
+				child2.add(secLayout.get(i));
+			}
+			else {
+				child2.add(primLayout.get(i));
+				child1.add(secLayout.get(i));
+			}
+		}
+
+		//then iterate through larger, to fill
+		for (int i = secLayout.size();i<primLayout.size();i++){
+			if (rnd.nextDouble() < 0.5){
+				child1.add(primLayout.get(i));
+				child2.add(primLayout.get(i));
+			}
+		}
+
+		double[][] child1A = utils.convertAL(child1);
+		double[][] child2A = utils.convertAL(child2);
+
+		//child1A = repairLayout(child1A);
+		//child2A = repairLayout(child2A);
+
+		children.add(child1A);
+		children.add(child2A);
+
+		return children;
+	}
+	
+	public ArrayList<double[][]> crossoverUniform3(double[][] layout1, double[][] layout2){
+		ArrayList<double[][]> children = new ArrayList<double[][]>();
+		ArrayList<double[]> child1 = new ArrayList<double[]>();
+		ArrayList<double[]> child2 = new ArrayList<double[]>();
+		ArrayList<double[]> primLayout = new ArrayList<double[]>();
+		ArrayList<double[]> secLayout = new ArrayList<double[]>();
+
+		//take larger layout
+		if (layout1.length >= layout2.length){
+			primLayout = utils.convertA(layout1);
+			secLayout = utils.convertA(layout2);
+		}
+		else{
+			primLayout = utils.convertA(layout2);
+			secLayout = utils.convertA(layout1);
+		}
+
+		int counter = 0;
+		int proportion = c3Perc/100 * primLayout.size(); //auto-floors
+		
+		//iterate through smaller layout
+		for (int i = 0; i<secLayout.size();i++){
+			if (counter<proportion){ 
+				child1.add(primLayout.get(i));
+				child2.add(secLayout.get(i));
+			}
+			else {
+				child2.add(primLayout.get(i));
+				child1.add(secLayout.get(i));
+			}
+			counter++;
+		}
+
+		//then iterate through larger, to fill
+		for (int i = secLayout.size();i<primLayout.size();i++){
+			//if (rnd.nextDouble() < 0.5){
+			child1.add(primLayout.get(i));
+			child2.add(primLayout.get(i));
+			//}
+		}
+
+		double[][] child1A = utils.convertAL(child1);
+		double[][] child2A = utils.convertAL(child2);
+
+		//child1A = repairLayout(child1A);
+		//child2A = repairLayout(child2A);
+
+		children.add(child1A);
+		children.add(child2A);
+
+		return children;
+	}
 
 	public double[][] repairLayoutS(double[][] layout){
 		if (!wfle.checkConstraint(layout)){
@@ -513,6 +607,48 @@ public class MyGA2 {
 		return parents;
 	}
 	
+	public ArrayList<double[][]> tournament2(ArrayList<double[][]> pops, ArrayList<Double> fits, int tourSize){
+		int[] parentInds = new int[(int)Math.ceil(pops.size()/2)];
+		//e.g. 5 layouts, 3 playoffs
+		
+		for (int i = 0;i<parentInds.length;i++){
+			HashMap<Integer, ArrayList> contestants = new HashMap<Integer, ArrayList>(); //AL = double(fits), int(size)
+			for (int j = 0;j<tourSize;j++){
+				int p = rnd.nextInt(pops.size());
+				ArrayList metrics = new ArrayList();
+				metrics.add(fits.get(p));
+				metrics.add(populations.get(p).length);
+				contestants.put(p, metrics);
+			}
+			
+			Map.Entry<Integer, ArrayList> bestCont = null;
+			for (Map.Entry<Integer, ArrayList> entry : contestants.entrySet()){
+				double takeLarger = rnd.nextDouble();
+			    if (bestCont == null){
+			    	bestCont = entry;
+			    }
+			    //new fit better, new size better
+			    if (((Double)entry.getValue().get(0) < (Double)bestCont.getValue().get(0)) && ((Integer)entry.getValue().get(1) < (Integer)bestCont.getValue().get(1))){
+			    	bestCont = entry;
+			    }
+			    //new fit worse, new size better
+			    else if (((Double)entry.getValue().get(0) > (Double)bestCont.getValue().get(0)) && ((Integer)entry.getValue().get(1) < (Integer)bestCont.getValue().get(1))){
+			    	if (takeLarger>takeLargerProb){
+			    		System.out.println("worse parent accepted");
+			    		bestCont = entry;
+			    	}
+			    }
+			}
+			parentInds[i] = bestCont.getKey();
+		}
+		
+		ArrayList<double[][]> parents = new ArrayList<double[][]>();
+		for (int i = 0;i<parentInds.length;i++){
+			parents.add(pops.get(i));
+		}
+		return parents;
+	}
+	
 	public ArrayList<double[][]> addChildren(ArrayList<double[][]> pops, ArrayList<double[][]> children){
 		for (double[][] child : children){
 			pops.add(child);
@@ -532,8 +668,13 @@ public class MyGA2 {
 			while (r2 == r1){
 				r2 = rnd.nextInt(parents.size());
 			}
-
-			ArrayList<double[][]> kids = crossoverUniform(parents.get(r1), parents.get(r2));
+			ArrayList<double[][]> kids;
+			switch (crossMode){
+				case 1: kids = crossoverUniform(parents.get(r1), parents.get(r2)); break;
+				case 2: kids = crossoverUniform2(parents.get(r1), parents.get(r2)); break;
+				case 3: kids = crossoverUniform3(parents.get(r1), parents.get(r2)); break;
+				default: System.out.println("no crossMode specified, defaulting to 1"); kids = crossoverUniform(parents.get(r1), parents.get(r2)); break;
+			}
 			for(int j=0;j<kids.size();j++){
 				children.add(kids.get(j));
 			}
@@ -614,6 +755,19 @@ public class MyGA2 {
 		return layout;
 	}
 	
+	public int checkForChildren(ArrayList<double[][]> pops, ArrayList<double[][]> children) {
+		int childrenSurvived = 0;
+		for (double[][] child : children){
+			for (double[][] pop : pops){
+				if (pop.equals(child)){
+					childrenSurvived++;
+				}
+			}
+		}
+		
+		return childrenSurvived;	
+	}
+	
 	public ArrayList<Double> evalGen(ArrayList<double[][]> pops){
 		fitnesses.clear();
 		ArrayList<Double> newFits = new ArrayList<Double>();
@@ -629,12 +783,12 @@ public class MyGA2 {
 		return newFits;
 	}
 	
-	public void saveResults(ArrayList<double[][]> pops, ArrayList<Double> fits){
+	public void saveResults(ArrayList<double[][]> pops, ArrayList<Double> fits, int childrenSurv){
 		//called at end of each gen
-		ArrayList<Triple<Integer, Double, Integer>> generation = new ArrayList<Triple<Integer, Double, Integer>>();
+		ArrayList<Result<Integer, Double, Integer, Integer>> generation = new ArrayList<Result<Integer, Double, Integer, Integer>>();
 		int popNo = 0;
 		for (double[][] layout : pops){
-			Triple<Integer, Double, Integer> pop = new Triple<Integer, Double, Integer>(popNo,fits.get(popNo),layout.length);
+			Result<Integer, Double, Integer, Integer> pop = new Result<Integer, Double, Integer, Integer>(popNo,fits.get(popNo),layout.length, childrenSurv/this.popNo);
 			popNo++;
 			generation.add(pop);
 		}
@@ -646,7 +800,7 @@ public class MyGA2 {
 		return bestLayout;
 	}
 	
-	public ArrayList<ArrayList<Triple<Integer, Double, Integer>>> getResults() {
+	public ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>> getResults() {
 		return results;
 	}
 	
@@ -661,6 +815,11 @@ public class MyGA2 {
 		maxGausDist 			= Double.parseDouble(prop.getProperty("maxGausDist"));
 		useRepA 				= Boolean.parseBoolean(prop.getProperty("useRepA"));
 		useMutAddA 				= Boolean.parseBoolean(prop.getProperty("useMutAddA"));
+		crossMode 				= Integer.parseInt(prop.getProperty("crossMode"));
+		c2Prob					= Double.parseDouble(prop.getProperty("c2Prob"));
+		c3Perc					= Integer.parseInt(prop.getProperty("c3Perc"));
+		altTourn				= Boolean.parseBoolean(prop.getProperty("altTourn"));		
+		takeLargerProb			= Double.parseDouble(prop.getProperty("takeLargerProb"));
 		altMode 				= prop.getProperty("altMode");
 	}
 	

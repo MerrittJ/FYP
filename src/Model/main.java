@@ -8,22 +8,22 @@ public class main {
 
 	public static void main(String argv[]) {
 		try {
-			int runs = 2;
+			int runs = 5;
 			ArrayList<String> settings = new ArrayList<String>();
 			settings.add("Settings/settings1.properties");
-//			settings.add("Settings/settings2.properties");
-//			settings.add("Settings/settings3.properties");
+			settings.add("Settings/settings2.properties");
+			settings.add("Settings/settings3.properties");
 //			settings.add("Settings/settings4.properties");
 //			settings.add("Settings/settings5.properties");
 
-			ArrayList<ArrayList<ArrayList<Triple<Integer, Double, Integer>>>> results = new ArrayList<ArrayList<ArrayList<Triple<Integer, Double, Integer>>>>(); //run -> gen -> pop#,fit,turb#
+			ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>> results = new ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>>(); //run -> gen -> pop#,fit,turb#
 			
 			for (int j = 0;j<settings.size();j++){
 				for (int i = 0; i<runs;i++){
 					WindScenario ws = new WindScenario("Scenarios/00.xml"); //def = Scenarios/obs_00.xml
 					KusiakLayoutEvaluator wfle = new KusiakLayoutEvaluator();
 					wfle.initialize(ws);
-					MyGA2 myga = new MyGA2(wfle, settings.get(j));
+					MyGA2 myga = new MyGA2(wfle, settings.get(j), i);
 					//View v = new View(myga.getBestLayout());
 
 					results.add(myga.getResults());
