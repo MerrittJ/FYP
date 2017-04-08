@@ -16,21 +16,21 @@ public class main {
 			//settings.add("settings13");
 //			settings.add("settings14");
 			//settings.add("settings15");
-			settings.add("settings21");
+			//settings.add("settings21");
 //			settings.add("settings22");
-			settings.add("settings23");
+			//settings.add("settings23");
 //			settings.add("settings24");
-			settings.add("settings25");
+			//settings.add("settings25");
 			//settings.add("settings31");
 //			settings.add("settings32");
 			//settings.add("settings33");
 //			settings.add("settings34");
 			//settings.add("settings35");
-			//settings.add("settings41");
+			settings.add("settings41");
 //			settings.add("settings42");
-			//settings.add("settings43");
+			settings.add("settings43");
 //			settings.add("settings44");
-			//settings.add("settings45");
+			settings.add("settings45");
 
 			for (int j = 0;j<settings.size();j++){
 				ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>> results = new ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer, Integer>>>>(); //run -> gen -> pop#,fit,turb#
