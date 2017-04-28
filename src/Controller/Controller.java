@@ -26,9 +26,10 @@ public class Controller {
 
 			//Uncomment settings configuration to include it in runtime
 			
-			settings.add("settings00");
-			//settings.add("settings11");
-			//settings.add("settings12");
+			settings.add("settings00"); //random search
+			//settings.add("settings11"); //GECCO GA
+			// main experiments from here on
+			//settings.add("settings12"); 
 			//settings.add("settings13");
 			//settings.add("settings21");
 			//settings.add("settings22");
