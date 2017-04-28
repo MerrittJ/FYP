@@ -6,10 +6,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
+ * Utilities class performing simple functions used throughout the GA
  * @author JoshMerritt
  * 
- * Utilities class performing simple functions used throughout the GA
- *
  */
 public class Utils {
 
@@ -25,11 +24,11 @@ public class Utils {
 
 	}
 
-	/**
+	/**Function to sort a map. Used for determining which turbines violate minimum distance the most during advanced repair
 	 * @param map
 	 * @return map ordered by value
 	 * 
-	 * Function to sort a map. Used for determining which turbines violate minimum distance the most during advanced repair
+	 * 
 	 */
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
 		return map.entrySet()
@@ -43,11 +42,11 @@ public class Utils {
 						));
 	}
 
-	/**
+	/**Sorts a specific arrayList. Used for determining the winner of competitions in the selection operator
 	 * @param al
 	 * @return sorted pair arrayList based on double object
 	 * 
-	 * Sorts a specific arrayList. Used for determining the winner of competitions in the selection operator
+	 * 
 	 */
 	public ArrayList<Pair<Integer, Double>> sortPairs(ArrayList<Pair<Integer, Double>> al){
 		//sort based on the double value (fitness)
@@ -67,14 +66,14 @@ public class Utils {
 		return al;
 	}
 
-	/**
+	/**Simple function to determine distance between two points. Returns true if this distance is <308
 	 * @param x1
 	 * @param y1
 	 * @param x2
 	 * @param y2
 	 * @return boolean indicating if two points are too close
 	 * 
-	 * Simple function to determine distance between two points. Returns true if this distance is <308
+	 * 
 	 */
 	public boolean tooClose(double x1, double y1, double x2, double y2){
 		if ((Math.abs((double)(x2-x1)) < 308) && (Math.abs((double)(y2-y1)) < 308)){ //check if in square
@@ -87,11 +86,11 @@ public class Utils {
 		return false;
 	}
 
-	/**
+	/**Simple function to determine if a point is outside of layout field. Returns true if the case
 	 * @param point
 	 * @return boolean indicating if point is outside of layout field
 	 * 
-	 * Simple function to determine if a point is outside of layout field. Returns true if the case
+	 * 
 	 */
 	public boolean outOfBounds(double[] point){
 		if (point[0] < 0 || point[1] < 0 || point[0] > wfle.getFarmWidth() || point[1] > wfle.getFarmHeight()){
@@ -102,7 +101,7 @@ public class Utils {
 		}
 	}
 
-	/**
+	/** Finds the Euclidean distance between two points
 	 * @param x1
 	 * @param y1
 	 * @param x2
@@ -113,12 +112,12 @@ public class Utils {
 		return Math.hypot(x2-x1, y2-y1);
 	}
 
-	/**
+	/**Function to determine if a turbine can be placed at a given point in the current layout. True if the case
 	 * @param point
 	 * @param layout
 	 * @return boolean indicating if point is not within 308px of any turbines
 	 * 
-	 * Function to determine if a turbine can be placed at a given point in the current layout. True if the case
+	 * 
 	 */
 	public boolean pointValid(double[] point, double[][] layout){
 		for (int i=0; i<layout.length;i++){
@@ -134,11 +133,11 @@ public class Utils {
 		return true;
 	}
 
-	/**
+	/**Function to help swap between arrayList and array objects as each have uses within project.
 	 * @param al
 	 * @return Layout in the form of double[][] for use with GECCO functions
 	 * 
-	 * Function to help swap between arrayList and array objects as each have uses within project.
+	 * 
 	 */
 	public double[][] convertAL(ArrayList<double[]> al){
 		double[][] layout = new double[al.size()][];
@@ -154,11 +153,11 @@ public class Utils {
 		return layout;
 	}
 
-	/**
+	/**Function to help swap between arrayList and array objects as each have uses within project.
 	 * @param layout
 	 * @return Layout in the form of ArrayList<double[]> for use when a layout may be expanding/contracting
 	 * 
-	 * Function to help swap between arrayList and array objects as each have uses within project.
+	 * 
 	 */
 	public ArrayList<double[]> convertA(double[][] layout){
 		ArrayList<double[]> nl = new ArrayList<double[]>();
@@ -168,12 +167,12 @@ public class Utils {
 		return nl;
 	}
 
-	/**
+	/**Function to print fitness values. Has toggle to indicate if all layout fitness values should be printed or just the generation's best
 	 * @param all
 	 * @param fitnesses
 	 * @param populations
 	 * 
-	 * Function to print fitness values. Has toggle to indicate if all layout fitness values should be printed or just the generation's best
+	 * 
 	 */
 	public void printFits(boolean all, ArrayList<Double> fitnesses, ArrayList<double[][]> populations){
 		Collections.sort(fitnesses);
@@ -191,10 +190,10 @@ public class Utils {
 
 	}
 
-	/**
+	/**Getter method to assist with loading a settings file
 	 * @return 
 	 * 
-	 * Getter method to assist with loading a settings file
+	 * 
 	 */
 	public Properties getSettings(){
 		return settings;

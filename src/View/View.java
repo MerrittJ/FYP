@@ -5,10 +5,10 @@ import java.awt.Dimension;
 
 import javax.swing.*;
 
-/**
+/**Swing GUI to visualise layouts
  * @author JoshMerritt
  * 
- * Swing GUI to visualise layouts
+ * 
  *
  */
 public class View {

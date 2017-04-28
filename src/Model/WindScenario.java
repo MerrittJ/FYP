@@ -9,10 +9,10 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-/**
+/**GECCO-provided wind scenario class. Only one scenario used in final deliverable
  * @author GECCO
  * 
- * GECCO-provided wind scenario class. Only one scenario used in final deliverable
+ * 
  *
  */
 public class WindScenario {

@@ -11,9 +11,10 @@ import Model.WindScenario;
 import View.View;
 
 /**
+ * Core module from which the project is run. Initialises layout evaluator and GA and writes results. Also enables the automation of experiments by taking settings files.
  * @author JoshMerritt
  * 
- * Core module from which the project is run. Initialises layout evaluator and GA and writes results. Also enables the automation of experiments by taking settings files.
+ * 
  *
  */
 public class Controller {

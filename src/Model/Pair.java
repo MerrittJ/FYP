@@ -1,12 +1,12 @@
 package Model;
 
-/**
+/**Basic Pair class implementation. Used in selection operator when handling fitness and index of layouts.
  * @author JoshMerritt
  *
  * @param <X>
  * @param <Y>
  * 
- * Basic Pair class implementation. Used in selection operator when handling fitness and index of layouts.
+ * 
  */
 public class Pair<X, Y> {
 	public X x;

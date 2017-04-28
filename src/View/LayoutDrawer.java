@@ -7,10 +7,10 @@ import java.awt.geom.Line2D;
 
 import javax.swing.JPanel;
 
-/**
+/**Swing component used to visualise layouts
  * @author JoshMerritt
  * 
- * Swing component used to visualise layouts
+ * 
  *
  */
 public class LayoutDrawer extends JPanel {

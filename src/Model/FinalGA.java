@@ -7,10 +7,10 @@ import java.util.Properties;
 import java.util.Random;
 
 
-/**
+/**Core module for GA functionality
  * @author JoshMerritt
  * 
- * Core module for GA functionality
+ * 
  *
  */
 public class FinalGA {
@@ -89,13 +89,13 @@ public class FinalGA {
 
 
 
-	/**
+	/**Initialise the GA with settings file, constraints, and random seed. Check if alternate mode is enabled.
+	 * Begins run by initialising populations before running the GA
 	 * @param evaluator
 	 * @param settingsName
 	 * @param seed
 	 * 
-	 * Initialise the GA with settings file, constraints, and random seed. Check if alternate mode is enabled.
-	 * Begins run by initialising populations before running the GA
+	 * 
 	 */
 	public FinalGA(WindFarmLayoutEvaluator evaluator, String settingsName, int seed){
 		wfle = evaluator;
@@ -195,10 +195,10 @@ public class FinalGA {
 		}
 	}
 
-	/**
+	/**Common computational intelligence algorithm; local search add variant. The algorithm attempts to add a turbine to a random location, checking if it improves the fitness value. If it does, it places it. Otherwise the layout is considered finished.
 	 * @return true if turbine added. False otherwise.
 	 * 
-	 * Common computational intelligence algorithm; local search add variant. The algorithm attempts to add a turbine to a random location, checking if it improves the fitness value. If it does, it places it. Otherwise the layout is considered finished.
+	 * 
 	 */
 	public boolean LSAddOne(){
 		boolean added = false; //check if any turbine added to a pop
@@ -255,10 +255,10 @@ public class FinalGA {
 
 	}
 
-	/**
+	/**Common computational intelligence algorithm; local search remove variant. The algorithm attempts to remove a turbine, checking if this improves the fitness value. If it does, it removes it. Otherwise the layout is considered finished.
 	 * @return true if turbine removed. False otherwise.
 	 * 
-	 * Common computational intelligence algorithm; local search remove variant. The algorithm attempts to remove a turbine, checking if this improves the fitness value. If it does, it removes it. Otherwise the layout is considered finished.
+	 * 
 	 */
 	public boolean LSRemoveOne(){
 		boolean removed = false; //check if turbine removed
@@ -295,12 +295,12 @@ public class FinalGA {
 
 	}	
 
-	/**
+	/**Function used to move a turbine within a layout, i.e. for the move mutate operator. Moves a turbine by finding the X and Y distance using a Gaussian distribution. Attempts to move the turbine 100 times before 'giving up'.
 	 * @param layout Layout to mutate
 	 * @param moveInd Index of the turbine to move
 	 * @return a layout with one turbine moved
 	 * 
-	 * Function used to move a turbine within a layout, i.e. for the move mutate operator. Moves a turbine by finding the X and Y distance using a Gaussian distribution. Attempts to move the turbine 100 times before 'giving up'.
+	 * 
 	 */
 	public double[][] moveOne(double[][] layout, int moveInd){
 		//System.out.println(wfle.evaluate(layout));
@@ -349,10 +349,10 @@ public class FinalGA {
 		return result;
 	}
 
-	/**
+	/**Create a layout with turbines placed randomly within. Randomly selects a maximum number of turbines to place (up to 1000). Attempts to add a turbine 500 times before 'giving up' and considering the layout full.
 	 * @return A layout
 	 * 
-	 * Create a layout with turbines placed randomly within. Randomly selects a maximum number of turbines to place (up to 1000). Attempts to add a turbine 500 times before 'giving up' and considering the layout full.
+	 * 
 	 */
 	public double[][] initRandom(){
 		int tries = 0;
@@ -376,10 +376,10 @@ public class FinalGA {
 		return utils.convertAL(layout);
 	}
 
-	/**
+	/**Create a layout where turbines are dispersed semi-regularly with the minimum spacing requirement between them, plus an additional percentage of the field width/height. Default initialisation for GA.
 	 * @return A layout
 	 * 
-	 * Create a layout where turbines are dispersed semi-regularly with the minimum spacing requirement between them, plus an additional percentage of the field width/height. Default initialisation for GA.
+	 * 
 	 */
 	public double[][] initGridRnd(){
 		double spacerX = wfle.getFarmWidth()*initGridSpacing; //randomising spacing of grid up to x%
@@ -397,14 +397,14 @@ public class FinalGA {
 		return utils.convertAL(layout);
 	}
 
-	/**
+	/**Crossover variant 1, uniform crossover. While iterating through the smaller of the two parent layouts, has 50% chance to take that turbine and place it in a child layout. If it does not, turbine with same index in larger layout is placed in child layout. 
+	 * When smaller layout is complete, larger layout is iterated through, with 50% chance for each remaining turbine to be place in child.
+	 * Second child is created by taking the turbines from both parents that were not used in first child.
 	 * @param layout1
 	 * @param layout2
 	 * @return Two child layouts
 	 * 
-	 * Crossover variant 1, uniform crossover. While iterating through the smaller of the two parent layouts, has 50% chance to take that turbine and place it in a child layout. If it does not, turbine with same index in larger layout is placed in child layout. 
-	 * When smaller layout is complete, larger layout is iterated through, with 50% chance for each remaining turbine to be place in child.
-	 * Second child is created by taking the turbines from both parents that were not used in first child.
+	 * 
 	 */
 	public ArrayList<double[][]> crossoverUniform(double[][] layout1, double[][] layout2){
 		ArrayList<double[][]> children = new ArrayList<double[][]>();
@@ -455,13 +455,13 @@ public class FinalGA {
 		return children;
 	}
 	
-	/**
+	/**Crossover variant 2, variable mixing ratio. While iterating through the smaller of the two parent layouts, has chance to take that turbine and place it in a child layout. If it does not, turbine with same index in larger layout is placed in child layout. Chance is derived from c2Prob parameter. 
+	 * When smaller layout is complete, larger layout is iterated through, with 50% chance for each remaining turbine to be place in child.
 	 * @param layout1
 	 * @param layout2
 	 * @return Two child layouts
 	 * 
-	 * Crossover variant 2, variable mixing ratio. While iterating through the smaller of the two parent layouts, has chance to take that turbine and place it in a child layout. If it does not, turbine with same index in larger layout is placed in child layout. Chance is derived from c2Prob parameter. 
-	 * When smaller layout is complete, larger layout is iterated through, with 50% chance for each remaining turbine to be place in child.
+	 * 
 	 */
 	public ArrayList<double[][]> crossoverUniform2(double[][] layout1, double[][] layout2){
 		ArrayList<double[][]> children = new ArrayList<double[][]>();
@@ -512,13 +512,13 @@ public class FinalGA {
 		return children;
 	}
 	
-	/**
+	/**Crossover variant 3, percentage of parent. While iterating through the smaller of the two parent layouts, takes all turbines up to a percentage of the total layout size and places them in a child layout. When percentage is met, fill the child with the second parent's turbines. Percentage is derived from c3Perc parameter. 
+	 * Second child is created by mirroring the above child, i.e. first portion of child is filled by the second parent's turbines and second portion by the first's.
 	 * @param layout1
 	 * @param layout2
 	 * @return Two child layouts
 	 * 
-	 * Crossover variant 3, percentage of parent. While iterating through the smaller of the two parent layouts, takes all turbines up to a percentage of the total layout size and places them in a child layout. When percentage is met, fill the child with the second parent's turbines. Percentage is derived from c3Perc parameter. 
-	 * Second child is created by mirroring the above child, i.e. first portion of child is filled by the second parent's turbines and second portion by the first's.
+	 * 
 	 */
 	public ArrayList<double[][]> crossoverUniform3(double[][] layout1, double[][] layout2){
 		ArrayList<double[][]> children = new ArrayList<double[][]>();
@@ -573,11 +573,10 @@ public class FinalGA {
 		return children;
 	}
 
-	/**
+	/** Simple repair function. Checks if layout is valid. If it is not, iterates through all turbines looking for those that are too close to other turbines and if they are, adds their index to a list. On completing the iterating, removes all turbines that appear in the 'offender' list.
 	 * @param layout
 	 * @return Repaired layout
 	 * 
-	 * Simple repair function. Checks if layout is valid. If it is not, iterates through all turbines looking for those that are too close to other turbines and if they are, adds their index to a list. On completing the iterating, removes all turbines that appear in the 'offender' list.
 	 */
 	public double[][] repairLayoutS(double[][] layout){
 		if (!wfle.checkConstraint(layout)){
@@ -610,12 +609,12 @@ public class FinalGA {
 		return layout;
 	}
 	
-	/**
+	/**Advanced repair function. Checks if layout is valid. If not, iterates through all turbines looking for those that are too close to other turbines and if they are, adds their index to a list. If the turbine is too close to more than one other turbine, this is also noted. 
+	 * On completing the iterating, sorts the list of indices and numbers of violations and removes the most offending turbine. The layout is rechecked for validity and if it is still invalid, the next more offending turbine is removed, and so on.
 	 * @param layout
 	 * @return Repaired layout
 	 * 
-	 * Advanced repair function. Checks if layout is valid. If not, iterates through all turbines looking for those that are too close to other turbines and if they are, adds their index to a list. If the turbine is too close to more than one other turbine, this is also noted. 
-	 * On completing the iterating, sorts the list of indices and numbers of violations and removes the most offending turbine. The layout is rechecked for validity and if it is still invalid, the next more offending turbine is removed, and so on.
+	 * 
 	 */
 	public double[][] repairLayoutA(double[][] layout){
 		System.out.println("beginning repA");
@@ -661,12 +660,12 @@ public class FinalGA {
 		return layout;
 	}
 	
-	/**
+	/**Function to repair the whole population. Iterates through individuals, repairing as necessary and according to the repair variant selected in settings.
 	 * @param pops
 	 * @param adv
 	 * @return A fully repaired population
 	 * 
-	 * Function to repair the whole population. Iterates through individuals, repairing as necessary and according to the repair variant selected in settings.
+	 * 
 	 */
 	public ArrayList<double[][]> repairAll(ArrayList<double[][]> pops, boolean adv){
 		ArrayList<double[][]> newPops = new ArrayList<double[][]>();
@@ -686,12 +685,12 @@ public class FinalGA {
 		return newPops;
 	}
 
-	/**
+	/**Survival selection function. Take the top half of all layouts (elitism) and allow them to progress to next generation.
 	 * @param pops
 	 * @param fits
 	 * @return List of layouts to survive to next generation
 	 * 
-	 * Survival selection function. Take the top half of all layouts (elitism) and allow them to progress to next generation.
+	 * 
 	 */
 	public ArrayList<double[][]> selection(ArrayList<double[][]> pops, ArrayList<Double> fits){
 		//select best half of all layouts
@@ -722,13 +721,13 @@ public class FinalGA {
 
 	}
 	
-	/**
+	/**Parent selection function. Creates popNo/2 competitions of size 2 and populates these randomly from the population. The winner is the layout with a better fitness value and is permitted to be a parent and is added to the 'parents' list.
 	 * @param pops
 	 * @param fits
 	 * @param tourSize
 	 * @return List of layouts that will be parents for child layouts this generation
 	 * 
-	 * Parent selection function. Creates popNo/2 competitions of size 2 and populates these randomly from the population. The winner is the layout with a better fitness value and is permitted to be a parent and is added to the 'parents' list.
+	 * 
 	 */
 	public ArrayList<double[][]> tournament(ArrayList<double[][]> pops, ArrayList<Double> fits, int tourSize){
 		int[] parentInds = new int[(int)Math.ceil(pops.size()/2)];
@@ -757,15 +756,15 @@ public class FinalGA {
 		return parents;
 	}
 	
-	/**
+	/**Alternative parent selection function. Creates popNo/2 competitions of size 2 and populates these randomly from the population. 
+	 * If a layout has fewer turbines and better fitness value, it is the winner. If it has fewer turbines and worse fitness value, it has a chance to be accepted as winner.
+	 * The winner is permitted to be a parent and is added to the 'parents' list.
 	 * @param pops
 	 * @param fits
 	 * @param tourSize
 	 * @return List of layouts that will be parents for child layouts this generation
 	 * 
-	 * Alternative parent selection function. Creates popNo/2 competitions of size 2 and populates these randomly from the population. 
-	 * If a layout has fewer turbines and better fitness value, it is the winner. If it has fewer turbines and worse fitness value, it has a chance to be accepted as winner.
-	 * The winner is permitted to be a parent and is added to the 'parents' list.
+	 * 
 	 */
 	public ArrayList<double[][]> tournament2(ArrayList<double[][]> pops, ArrayList<Double> fits, int tourSize){
 		int[] parentInds = new int[(int)Math.ceil(pops.size()/2)];
@@ -809,12 +808,12 @@ public class FinalGA {
 		return parents;
 	}
 	
-	/**
+	/**Function to introduce children to the population.
 	 * @param pops
 	 * @param children
 	 * @return Full population
 	 * 
-	 * Function to introduce children to the population.
+	 * 
 	 */
 	public ArrayList<double[][]> addChildren(ArrayList<double[][]> pops, ArrayList<double[][]> children){
 		for (double[][] child : children){
@@ -824,11 +823,11 @@ public class FinalGA {
 		return pops;
 	}
 	
-	/**
+	/**Crossover genetic operator controller. Takes a list of parents and randomly selects from them to undergo crossover. Crossover variant depends on GA input settings.
 	 * @param parents
 	 * @return ArrayList of newly created child layouts 
 	 * 
-	 * Crossover genetic operator controller. Takes a list of parents and randomly selects from them to undergo crossover. Crossover variant depends on GA input settings.
+	 * 
 	 */
 	public ArrayList<double[][]> crossover(ArrayList<double[][]> parents){
 		ArrayList<double[][]> children = new ArrayList<double[][]>();
@@ -855,13 +854,13 @@ public class FinalGA {
 		return children;
 	}
 	
-	/**
+	/**Mutation genetic operator controller. Takes a list of children created this generation and passes them to the appropriate mutation variant. Mutation variant depends on GA input settings.
 	 * @param children
 	 * @param mutRateT
 	 * @param mutRateL
 	 * @return ArrayList of all children of this generation
 	 * 
-	 * Mutation genetic operator controller. Takes a list of children created this generation and passes them to the appropriate mutation variant. Mutation variant depends on GA input settings.
+	 * 
 	 */
 	public ArrayList<double[][]> mutate(ArrayList<double[][]> children, double mutRateT, double mutRateL){
 		//only mutates children
@@ -889,11 +888,11 @@ public class FinalGA {
 		return children;
 	}
 	
-	/**
+	/**Simple variant of the mutation add operator. Attempts 500 times to add a turbine to a random location in the layout. If there is space, add the turbine and continue trying to add more. Otherwise, do not.
 	 * @param layout
 	 * @return potentially mutated child
 	 * 
-	 * Simple variant of the mutation add operator. Attempts 500 times to add a turbine to a random location in the layout. If there is space, add the turbine and continue trying to add more. Otherwise, do not.
+	 * 
 	 */
 	public double[][] mutAddS(double[][] layout){
 		//randomly adds a turbine
@@ -921,11 +920,11 @@ public class FinalGA {
 		return layout;
 	}
 	
-	/**
+	/**Advanced variant of the mutation add operator. Iterates across the layout in a grid-like fashion, checking at specific points to see if there is space for a turbine. If there are spaces, add turbines at these points. Otherwise, do not.
 	 * @param layout
 	 * @return potentially mutated child
 	 * 
-	 * Advanced variant of the mutation add operator. Iterates across the layout in a grid-like fashion, checking at specific points to see if there is space for a turbine. If there are spaces, add turbines at these points. Otherwise, do not.
+	 * 
 	 */
 	public double[][] mutAddA(double[][] layout){
 		//adds a turbine where there is space
@@ -949,6 +948,10 @@ public class FinalGA {
 	}
 
 	
+	/**Evaluates all individuals in the current generation and updates the arraylist tracking fitness values
+	 * @param pops
+	 * @return
+	 */
 	public ArrayList<Double> evalGen(ArrayList<double[][]> pops){
 		fitnesses.clear();
 		ArrayList<Double> newFits = new ArrayList<Double>();
@@ -964,11 +967,11 @@ public class FinalGA {
 		return newFits;
 	}
 	
-	/**
+	/**Save the fitness value and layout size for each individual. Run at end of each generation
 	 * @param pops
 	 * @param fits
 	 * 
-	 * Save the fitness value and layout size for each individual. Run at end of each generation
+	 * 
 	 */
 	public void saveResults(ArrayList<double[][]> pops, ArrayList<Double> fits){
 		//called at end of each gen
@@ -991,10 +994,10 @@ public class FinalGA {
 		return results;
 	}
 	
-	/**
+	/**Function to load all GA settings specified by user
 	 * @param prop
 	 * 
-	 * Function to load all GA settings specified by user
+	 * 
 	 */
 	public void loadSettings(Properties prop){
 		//prop.getProperty("scen");

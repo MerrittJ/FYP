@@ -2,10 +2,10 @@ package Model;
 import java.util.ArrayList;
 import java.util.Random;
 
-/**
+/**GECCO-provided GA. Used to compare with final GA. Results found under 'Benchmark results' in report.
  * @author GECCO
  * 
- * GECCO-provided GA. Used to compare with final GA. Results found under 'Benchmark results' in report.
+ * 
  *
  */
 public class GA {

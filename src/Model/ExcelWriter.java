@@ -20,10 +20,10 @@ import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 
 
-/**
+/**Class to write results straight to an Excel file. Source code adapted from tutorial found here: http://www.vogella.com/tutorials/JavaExcel/article.html
  * @author JoshMerritt
  * 
- * Class to write results straight to an Excel file. Source code adapted from tutorial found here: http://www.vogella.com/tutorials/JavaExcel/article.html
+ * 
  *
  */
 public class ExcelWriter {
