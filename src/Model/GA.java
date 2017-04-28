@@ -1,8 +1,13 @@
+package Model;
 import java.util.ArrayList;
 import java.util.Random;
 
-import Model.WindFarmLayoutEvaluator;
-
+/**
+ * @author GECCO
+ * 
+ * GECCO-provided GA. Used to compare with final GA. Results found under 'Benchmark results' in report.
+ *
+ */
 public class GA {
 
     WindFarmLayoutEvaluator wfle;
@@ -15,10 +20,10 @@ public class GA {
     double cross_rate;
     ArrayList<double[]> grid;
 
-    public GA(WindFarmLayoutEvaluator evaluator) {
+    public GA(WindFarmLayoutEvaluator evaluator, int seed) {
         wfle = evaluator;
-        rand = new Random();
-        num_pop = 20; //def=20
+        rand = new Random(seed);
+        num_pop = 20;
         tour_size = 4;
         mut_rate = 0.05;
         cross_rate = 0.40;

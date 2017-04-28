@@ -9,6 +9,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+/**
+ * @author GECCO
+ * 
+ * GECCO-provided wind scenario class. Only one scenario used in final deliverable
+ *
+ */
 public class WindScenario {
 	// wind resources
 	public double ks[];
@@ -46,7 +52,7 @@ public class WindScenario {
     public double trans_CT;
     public double minDist;
 
-    WindScenario(String xmlFileName) throws Exception {
+    public WindScenario(String xmlFileName) throws Exception {
     	File fXmlFile = new File(xmlFileName);
     	DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
     	DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();

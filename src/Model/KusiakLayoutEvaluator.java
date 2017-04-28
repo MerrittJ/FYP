@@ -3,6 +3,12 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.StringTokenizer;
 
+/**
+ * @author GECCO
+ * 
+ * Layout evaluator class supplied by GECCO
+ *
+ */
 public class KusiakLayoutEvaluator extends WindFarmLayoutEvaluator {
 	protected double tspe[][];
 	protected double tpositions[][];

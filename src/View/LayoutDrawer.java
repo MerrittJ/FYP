@@ -7,7 +7,12 @@ import java.awt.geom.Line2D;
 
 import javax.swing.JPanel;
 
-
+/**
+ * @author JoshMerritt
+ * 
+ * Swing component used to visualise layouts
+ *
+ */
 public class LayoutDrawer extends JPanel {
 	private double[][] layout;
 	private double scale = 0.1;
@@ -21,7 +26,6 @@ public class LayoutDrawer extends JPanel {
 		}
 		this.layout = scLayout;
 	}
-
 
 	private void doDrawing(Graphics g) {
 

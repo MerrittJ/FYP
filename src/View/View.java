@@ -5,6 +5,12 @@ import java.awt.Dimension;
 
 import javax.swing.*;
 
+/**
+ * @author JoshMerritt
+ * 
+ * Swing GUI to visualise layouts
+ *
+ */
 public class View {
 
 	public View(double[][] layout){
@@ -26,20 +32,5 @@ public class View {
 		frame.pack();
 		frame.setVisible(true);
 	}
-	
-	public static void main(String[] args) {
-        //Schedule a job for the event-dispatching thread:
-        //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-            	double[][] layout = new double[2][2];
-            	layout[0][0] = 30.0;
-            	layout[0][1] = 30.0;
-            	layout[1][0] = 50.0;
-            	layout[1][1] = 50.0;
-            	View view = new View(layout);
-            }
-        });
-    }
 
 }
