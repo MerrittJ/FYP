@@ -82,14 +82,14 @@ public class FinalGA {
 	private ArrayList<Double> fitnesses;
 	private double[][] bestLayout;
 	private ArrayList<ArrayList<Result<Integer, Double, Integer>>> results; //gen -> pop#,fit,turb#
-	private double minSpac;
+	private double minSpacing;
 	private int tournSize = 2;
 	private Random rnd;
 	private Utils utils;
 
 
 
-	/**Initialise the GA with settings file, constraints, and random seed. Check if alternate mode is enabled.
+	/**Initialise the GA with settings file, constraints, and random seed. Checks if alternate mode is enabled.
 	 * Begins run by initialising populations before running the GA
 	 * @param evaluator
 	 * @param settingsName
@@ -104,7 +104,7 @@ public class FinalGA {
 		loadSettings(utils.getSettings());
 		population = new ArrayList<double[][]>();
 		fitnesses = new ArrayList<Double>();
-		minSpac = 8.001 * wfle.getTurbineRadius();
+		minSpacing = 8.001 * wfle.getTurbineRadius();
 		results = new ArrayList<ArrayList<Result<Integer, Double, Integer>>>();
 
 		if (altMode.equals("off")){
@@ -178,6 +178,7 @@ public class FinalGA {
 	 */
 	public void initAltRandom(){
 		double thisRun = 0.0;
+		double best = Double.MAX_VALUE;
 		for (int i = 0; i < popNo*genNo;){
 			double[][] layout;
 			layout = initRandom();
@@ -188,6 +189,9 @@ public class FinalGA {
 				thisRun = wfle.evaluate(layout);
 				fitnesses.add(thisRun);
 				System.out.println(layout.length + " " + thisRun );
+				if (thisRun < best){
+					bestLayout = layout;
+				}
 			}
 			else {
 				System.out.println("layout failed");
@@ -224,7 +228,7 @@ public class FinalGA {
 				for (int k=0;k<thisLayout.length;k++){
 					if (
 							(thisLayout[k][0] == 0.0 && thisLayout[k][1] == 0.0) ||
-							(minSpac > utils.getDist(thisLayout[k][0], thisLayout[k][1], x, y))
+							(minSpacing > utils.getDist(thisLayout[k][0], thisLayout[k][1], x, y))
 							){
 						viol = true;
 						break;
@@ -251,7 +255,7 @@ public class FinalGA {
 			}
 		}
 
-		return added; //if any turbines added, continue passes
+		return added; 
 
 	}
 
@@ -386,8 +390,8 @@ public class FinalGA {
 		double spacerY = wfle.getFarmHeight()*initGridSpacing;
 		ArrayList<double[]> layout = new ArrayList<double[]>();
 
-		for (double x=0.0; x<wfle.getFarmWidth(); x=x+(minSpac+(rnd.nextDouble()*spacerX))) {
-			for (double y=0.0; y<wfle.getFarmHeight(); y=y+(minSpac+(rnd.nextDouble()*spacerY))) {
+		for (double x=0.0; x<wfle.getFarmWidth(); x=x+(minSpacing+(rnd.nextDouble()*spacerX))) {
+			for (double y=0.0; y<wfle.getFarmHeight(); y=y+(minSpacing+(rnd.nextDouble()*spacerY))) {
 				double[] point = {x, y};
 				layout.add(point);
 			}
@@ -930,8 +934,8 @@ public class FinalGA {
 		//adds a turbine where there is space
 		double[] point = new double[2];
 		int added = 0;
-		for (double i = 0;i<wfle.getFarmWidth();i=i+minSpac){
-			for (double j = 0;j<wfle.getFarmHeight();j=j+minSpac){
+		for (double i = 0;i<wfle.getFarmWidth();i=i+minSpacing){
+			for (double j = 0;j<wfle.getFarmHeight();j=j+minSpacing){
 				point[0] = i;
 				point[1] = j;
 				if (utils.pointValid(point, layout)){

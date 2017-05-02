@@ -21,18 +21,18 @@ public class Controller {
 
 	public static void main(String argv[]) {
 		try {
-			int runs = 5;
+			int runs = 1;
 			ArrayList<String> settings = new ArrayList<String>();
 
 			//Uncomment settings configuration to include it in runtime
 			
 			settings.add("settings00"); //random search
-			//settings.add("settings11"); //GECCO GA
 			// main experiments from here on
+			//settings.add("settings11");		
 			//settings.add("settings12"); 
 			//settings.add("settings13");
 			//settings.add("settings21");
-			//settings.add("settings22");
+			//settings.add("settings22"); //best performing, may take several hours to run
 			//settings.add("settings23");
 			//settings.add("settings31");
 			//settings.add("settings32");
@@ -43,18 +43,20 @@ public class Controller {
 
 			for (int j = 0;j<settings.size();j++){
 				ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer>>>> results = new ArrayList<ArrayList<ArrayList<Result<Integer, Double, Integer>>>>(); //run -> gen -> pop#,fit,turb#
+				double[][] best = new double[0][2];
+				FinalGA myga;
 				for (int i = 0; i<runs;i++){
-					WindScenario ws = new WindScenario("Scenarios/00.xml"); //def = Scenarios/obs_00.xml
+					WindScenario ws = new WindScenario("Scenarios/00.xml");
 					KusiakLayoutEvaluator wfle = new KusiakLayoutEvaluator();
 					wfle.initialize(ws);
 					
 					//GA ga = new GA(wfle,i); //GECCO-provided GA
 					//ga.run();
 					
-					//View v = new View(myga.getBestLayout());
-					
-					FinalGA myga = new FinalGA(wfle, "Settings/"+settings.get(j)+".properties", i);
+					myga = new FinalGA(wfle, "Settings/"+settings.get(j)+".properties", i);
 					results.add(myga.getResults());
+					System.out.println(myga.getBestLayout());
+					best = myga.getBestLayout();
 				}
 
 				ExcelWriter test = new ExcelWriter();
@@ -63,6 +65,8 @@ public class Controller {
 				test.setResults(results);
 				test.write();
 				System.out.println("results written");
+				
+				View v = new View(best);
 			}
 
 
